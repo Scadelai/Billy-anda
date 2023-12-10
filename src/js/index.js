@@ -14,16 +14,17 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize( window.innerWidth, window.innerHeight );
 renderer.shadowMap.enabled = true;
 document.body.appendChild( renderer.domElement );
+scene.background = new THREE.Color(0xdd4814);
 
 const controls = new OrbitControls( camera, renderer.domElement );
 controls.update();
 
 // Lights
 
-const ambientLight = new THREE.AmbientLight( 0xffffff, 0.5 );
+const ambientLight = new THREE.AmbientLight( 0xffffff, 0.4 );
 scene.add( ambientLight );
 
-const spotLight = new THREE.SpotLight( 0xffffff, 0.7 );
+const spotLight = new THREE.SpotLight( 0xffffff, 0.6 );
 spotLight.position.set( 2, 12, 2 );
 spotLight.angle = Math.PI / 6;
 spotLight.penumbra = 0.5;
@@ -42,9 +43,9 @@ scene.add( spotLight );
 scene.add( spotLight.target );
 
 const planeGeometry = new THREE.PlaneGeometry( 100, 100 );
-const planeMaterial = new THREE.MeshStandardMaterial({ color: 0xbcbcbc });
+const planeMaterial = new THREE.MeshStandardMaterial({ color: 0x00008B });
 
-let accel = 0.01;
+let accel = 0;
 
 // Plane
 
@@ -70,10 +71,11 @@ loader.load('assets/billy_on_bike/scene.gltf', function (gltf) {
   });
 
   mixer = new THREE.AnimationMixer( billy );
-  const action = mixer.clipAction(gltf.animations[0]); // get the first (and only) animation
+  const action = mixer.clipAction(gltf.animations[0]);
   action.play();
 
   scene.add(billy);
+  if (mixer) mixer.update(0.01);
 });
 
 // Animation
@@ -81,8 +83,9 @@ loader.load('assets/billy_on_bike/scene.gltf', function (gltf) {
 function animate() {
   requestAnimationFrame( animate );
   renderer.render( scene, camera );
-  
-  if (mixer) mixer.update(0.01);
+  if (accel > 0){
+    if (mixer) mixer.update(0.01);
+  }
 
   if (billy) {
     billy.position.x -= accel * Math.sin(billy.rotation.y) * -1;
@@ -95,7 +98,8 @@ function animate() {
     spotLight.target = billy;
   }
 }
-animate();
+  
+  animate();
 
 // Keyboard controls
 
@@ -106,20 +110,22 @@ window.addEventListener('keydown', (event) => {
       break;
     case 'd':
       billy.rotation.y -= 0.05;
-      break;
-    case 'c':
-      spotLight.color.setHex(Math.random() * 0xffffff);
-      break;
+      break;     
     case 'r':
       billy.position.set(0, 0, 0);
       billy.rotation.set(0, 0, 0);
-      accel = 0.01;
+      accel = 0;
       break;
     case 'w':
       accel += 0.001;
       break;
     case 's':
-      accel -= 0.001;
+      if (accel > 0){
+        accel -= 0.001;
+      }
+      break;
+    default:
+      spotLight.color.setHex(Math.random() * 0xffffff);
       break;
   }
 });
